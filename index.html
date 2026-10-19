@@ -330,7 +330,23 @@ const LINES = {
   obs:{name:"Observability & Incidents",c:"#A3E635",d:"Logs, metrics, traces, SLOs, on-call"},
   arch:{name:"Architecture & Interviews",c:"#E879F9",d:"Monolith vs microservices, estimation, feeds, interview framework"}
 };
-const ORDER = ["arch","db","net","sec","scale","rel","msg","dist","ops","obs"];
+const ORDER = ["net","db","scale","rel","msg","dist","sec","ops","obs","arch"];
+const PATH = {
+  net:[60,59,58,3,9,150,57,77,116,124,17,56,55,54],
+  db:[129,130,125,133,20,21,5,4,131,132,25,26,15,23,24,30,22,29,28,145,146,154],
+  scale:[89,90,91,92,83,82,8,81,6,153,7,134,84,85,144,128,16,79,87,88,86],
+  rel:[155,10,11,12,1,13,112,2,96,97,98,95,99],
+  msg:[36,37,148,38,40,39,119,120,126,113,149,147],
+  dist:[14,80,93,32,33,94,137,136,135,31,27,127,141,34,35,114,115],
+  sec:[49,51,50,19,151,152,46,47,48,118,122,117,42,43,44,18,45,52,53,121],
+  ops:[61,62,63,64,139,74,75,67,68,65,66,76,78,69,72,70,71,73,41],
+  obs:[100,103,102,123,101,105,104,106,107,108,110,109,111],
+  arch:[140,138,142,143,156]
+};
+const SEQ = ORDER.flatMap(k=>PATH[k]);
+const num = id => SEQ.indexOf(id)+1;
+const nb = (id,d) => { const i=SEQ.indexOf(id); return i<0?null:byN(SEQ[i+d]); };
+const inLine = k => PATH[k].map(id=>byN(id));
 const NEW_FROM = 127;
 const KEY="system-design-guide-v3", THEME_KEY="system-design-guide-theme", STREAK_KEY="sd-metro-streak";
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -366,13 +382,13 @@ function progress(){
 function renderSide(){
   const box=$("#lines");let html="",any=false;
   ORDER.forEach(k=>{
-    const L=LINES[k];const all=T.filter(t=>t.c===k);
+    const L=LINES[k];const all=inLine(k);
     const shown=all.filter(t=>(filter==="all"||(filter==="done")===learned.has(t.n))&&(!query||(t.t+" "+t.s).toLowerCase().includes(query)));
     if(!shown.length)return;any=true;
     const done=all.filter(t=>learned.has(t.n)).length;
     const isClosed=closed.has(k)&&!query;
     html+=`<div class="lgroup${isClosed?" closed":""}" style="--c:${L.c}"><button class="lhead" data-line="${k}" aria-expanded="${!isClosed}"><span class="sw"></span><b>${esc(L.name)}</b><em>${done}/${all.length}</em><span class="chev">▾</span></button><div class="stations">`+
-      shown.map(t=>`<button class="st${learned.has(t.n)?" done":""}${t.n===current?" active":""}" data-n="${t.n}"><span class="no">${t.n}</span><span>${esc(t.t)}${t.n>=NEW_FROM?' <span class="newtag">new</span>':""}</span></button>`).join("")+`</div></div>`;
+      shown.map(t=>`<button class="st${learned.has(t.n)?" done":""}${t.n===current?" active":""}" data-n="${t.n}"><span class="no">${num(t.n)}</span><span>${esc(t.t)}${t.n>=NEW_FROM?' <span class="newtag">new</span>':""}</span></button>`).join("")+`</div></div>`;
   });
   box.innerHTML=any?html:`<div class="empty">No stations match. Clear the filter to see everything.</div>`;
 }
@@ -388,13 +404,13 @@ function home(){
   current=0;document.documentElement.style.removeProperty("--lc");
   const c=learned.size,pct=Math.round(c/T.length*100);
   const resume=last&&byN(last);
-  const next=T.find(t=>!learned.has(t.n));
+  const next=SEQ.map(byN).find(t=>!learned.has(t.n));
   $("#main").innerHTML=`<div class="wrap" style="max-width:1040px">
   <section class="hero">
     <h1>System design, one station at a time.</h1>
     <p>${T.length} ideas that real backend engineers use every day, in plain words. Each stop explains what it is, why it matters, exactly how to do it, the mistakes people make, and the questions you’ll get asked in interviews.</p>
     <div class="cta">
-      ${resume?`<button class="btn primary" id="goResume">Continue: ${esc(resume.t)}</button>`:`<button class="btn primary" id="goStart">Start at station 1</button>`}
+      ${resume?`<button class="btn primary" id="goResume">Continue: ${esc(resume.t)}</button>`:`<button class="btn primary" id="goStart">Start at lesson 1: ${esc(byN(SEQ[0]).t)}</button>`}
       ${next&&resume&&next.n!==resume.n?`<button class="btn" id="goNext">Next unlearned: ${esc(next.t)}</button>`:""}
       <button class="btn" id="goRandom">Surprise me</button>
       <button class="btn" id="goNew" style="border-color:#E879F9">✨ ${T.filter(t=>t.n>=NEW_FROM).length} new interview favourites</button>
@@ -402,10 +418,10 @@ function home(){
   </section>
   <section class="map" aria-label="Metro map of all topics">
     <div class="map-top"><h2>The network</h2><span>${c} of ${T.length} stations visited · ${pct}%</span></div>
-    <div class="map-scroll">${ORDER.map((k,i)=>{const L=LINES[k];return `<div class="mrow" style="--c:${L.c};--d:${(i*0.08).toFixed(2)}s"><div class="lbl"><i></i>${esc(L.name.split(" & ")[0])}</div><div class="track">${T.filter(t=>t.c===k).map(t=>`<button class="stn${learned.has(t.n)?" done":""}" data-n="${t.n}" aria-label="${esc(t.n+". "+t.t)}${learned.has(t.n)?" (learned)":""}"><span class="tip">${esc(t.t)}</span></button>`).join("")}</div></div>`}).join("")}</div>
+    <div class="map-scroll">${ORDER.map((k,i)=>{const L=LINES[k];return `<div class="mrow" style="--c:${L.c};--d:${(i*0.08).toFixed(2)}s"><div class="lbl"><i></i>${esc(L.name.split(" & ")[0])}</div><div class="track">${inLine(k).map(t=>`<button class="stn${learned.has(t.n)?" done":""}" data-n="${t.n}" aria-label="${esc(num(t.n)+". "+t.t)}${learned.has(t.n)?" (learned)":""}"><span class="tip">${esc(t.t)}</span></button>`).join("")}</div></div>`}).join("")}</div>
     <div class="map-legend"><span><b class="f"></b>Learned</span><span><b></b>Not yet</span><span>Tap any station to open it</span></div>
   </section>
-  <div class="lines-grid">${ORDER.map(k=>{const L=LINES[k];const all=T.filter(t=>t.c===k);const d=all.filter(t=>learned.has(t.n)).length;return `<button class="lcard" style="--c:${L.c}" data-line="${k}"><b>${esc(L.name)}</b><span>${esc(L.d)}</span><div class="lbar"><div style="width:${Math.round(d/all.length*100)}%"></div></div><span>${d} of ${all.length} learned</span></button>`}).join("")}</div>
+  <div class="lines-grid">${ORDER.map(k=>{const L=LINES[k];const all=inLine(k);const d=all.filter(t=>learned.has(t.n)).length;return `<button class="lcard" style="--c:${L.c}" data-line="${k}"><b>${esc(L.name)}</b><span>${esc(L.d)}</span><div class="lbar"><div style="width:${Math.round(d/all.length*100)}%"></div></div><span>${d} of ${all.length} learned</span></button>`}).join("")}</div>
   <div class="howto">
     <div><b>Read it once</b><p>Idea, why, how. Every lesson is written for a beginner but goes deep enough for interviews.</p></div>
     <div><b>Watch the trip</b><p>The animated route shows how the request or data actually flows.</p></div>
@@ -414,11 +430,11 @@ function home(){
   <p class="note" style="margin-top:22px">Shortcuts: <span class="kbd">Ctrl K</span> search · <span class="kbd">←</span> <span class="kbd">→</span> move between lessons · <span class="kbd">L</span> mark learned. On a phone, swipe left or right on a lesson.</p>
   </div>`;
   $$(".stn").forEach(b=>b.onclick=()=>show(+b.dataset.n));
-  $$(".lcard").forEach(b=>b.onclick=()=>show(T.find(t=>t.c===b.dataset.line&&!learned.has(t.n))?.n||T.find(t=>t.c===b.dataset.line).n));
-  $("#goStart")&&($("#goStart").onclick=()=>show(1));
+  $$(".lcard").forEach(b=>b.onclick=()=>show((inLine(b.dataset.line).find(t=>!learned.has(t.n))||inLine(b.dataset.line)[0]).n));
+  $("#goStart")&&($("#goStart").onclick=()=>show(SEQ[0]));
   $("#goResume")&&($("#goResume").onclick=()=>show(resume.n));
   $("#goNext")&&($("#goNext").onclick=()=>show(next.n));
-  $("#goNew").onclick=()=>show((T.find(t=>t.n>=NEW_FROM&&!learned.has(t.n))||byN(NEW_FROM)).n);
+  $("#goNew").onclick=()=>show((SEQ.map(byN).find(t=>t.n>=NEW_FROM&&!learned.has(t.n))||SEQ.map(byN).find(t=>t.n>=NEW_FROM)).n);
   $("#goRandom").onclick=()=>{const pool=T.filter(t=>!learned.has(t.n));const p=(pool.length?pool:T);show(p[Math.floor(Math.random()*p.length)].n)};
   progress();renderSide();updateDock();window.scrollTo({top:0});
 }
@@ -435,10 +451,10 @@ function playTrip(){
 function show(n){
   const t=byN(n);if(!t)return;current=n;last=n;save();
   const L=LINES[t.c];document.documentElement.style.setProperty("--lc",L.c);
-  const lineAll=T.filter(x=>x.c===t.c);const pos=lineAll.findIndex(x=>x.n===n)+1;
-  const prev=byN(n-1),next=byN(n+1);const isDone=learned.has(n);
+  const lineAll=inLine(t.c);const pos=lineAll.findIndex(x=>x.n===n)+1;
+  const prev=nb(n,-1),next=nb(n,1);const isDone=learned.has(n);
   $("#main").innerHTML=`<article class="wrap lesson">
-  <div class="crumbs"><span class="lbadge"><i>${pos}</i>${esc(L.name)} line</span><span>Station ${pos} of ${lineAll.length} · Lesson ${n} of ${T.length}</span></div>
+  <div class="crumbs"><span class="lbadge"><i>${pos}</i>${esc(L.name)} line</span><span>Station ${pos} of ${lineAll.length} · Lesson ${num(n)} of ${T.length}</span></div>
   <h1>${esc(t.t)}</h1>
   <p class="tldr">${esc(t.s)}</p>
   <nav class="jump" aria-label="On this page"><a href="#s-idea">The idea</a><a href="#s-why">Why it matters</a><a href="#s-how">How to do it</a><a href="#s-trip">The flow</a><a href="#s-story">Real story</a><a href="#s-oops">Mistakes</a><a href="#s-vs">Don’t mix up</a><a href="#s-quiz">Test yourself</a></nav>
@@ -476,7 +492,7 @@ function toggleLearned(n){
   const t=byN(n);
   if(learned.has(n)){learned.delete(n);save();toast("Unmarked. It’s back on your review list.")}
   else{learned.add(n);save();const d=bumpStreak();showStreak();confetti(LINES[t.c].c);
-    const all=T.filter(x=>x.c===t.c);
+    const all=inLine(t.c);
     if(all.every(x=>learned.has(x.n)))toast("🎉 You finished the whole "+LINES[t.c].name+" line!");
     else if(learned.size===T.length)toast("🏆 All "+T.length+" stations. You’ve mapped the entire network.");
     else toast("Station learned · "+learned.size+" of "+T.length+(d>1?" · 🔥 "+d+"-day streak":""));}
@@ -486,13 +502,13 @@ function toggleLearned(n){
 /* dock */
 function updateDock(){
   const inLesson=current>0;
-  $("#dPrev").disabled=!inLesson||!byN(current-1);$("#dNext").disabled=!inLesson||!byN(current+1);
+  $("#dPrev").disabled=!inLesson||!nb(current,-1);$("#dNext").disabled=!inLesson||!nb(current,1);
   $("#dDone").disabled=!inLesson;$("#dDone").classList.toggle("hi",inLesson&&learned.has(current));
 }
 $("#dMap").onclick=()=>{closeSheet();home()};
 $("#dList").onclick=()=>openSheet();
-$("#dPrev").onclick=()=>current>1&&show(current-1);
-$("#dNext").onclick=()=>byN(current+1)&&show(current+1);
+$("#dPrev").onclick=()=>{const x=nb(current,-1);x&&show(x.n)};
+$("#dNext").onclick=()=>{const x=nb(current,1);x&&show(x.n)};
 $("#dDone").onclick=()=>current&&toggleLearned(current);
 function openSheet(){$("#side").classList.add("open");$("#scrim").classList.add("open");const a=$(".st.active");a&&a.scrollIntoView({block:"center"})}
 function closeSheet(){$("#side").classList.remove("open");$("#scrim").classList.remove("open")}
@@ -505,9 +521,9 @@ function openPal(){$("#pal").classList.add("open");$("#palIn").value="";renderPa
 function closePal(){$("#pal").classList.remove("open")}
 function renderPal(){
   const q=$("#palIn").value.trim().toLowerCase();
-  palItems=(q?T.filter(t=>(t.t+" "+t.s+" "+LINES[t.c].name).toLowerCase().includes(q)).sort((a,b)=>(b.t.toLowerCase().includes(q))-(a.t.toLowerCase().includes(q))):T.filter(t=>!learned.has(t.n)).slice(0,8)).slice(0,30);
+  palItems=(q?T.filter(t=>(t.t+" "+t.s+" "+LINES[t.c].name).toLowerCase().includes(q)).sort((a,b)=>(b.t.toLowerCase().includes(q))-(a.t.toLowerCase().includes(q))):SEQ.map(byN).filter(t=>!learned.has(t.n)).slice(0,8)).slice(0,30);
   palSel=0;
-  $("#palRes").innerHTML=palItems.length?palItems.map((t,i)=>`<button class="pr" role="option" aria-selected="${i===0}" data-n="${t.n}" style="--c:${LINES[t.c].c}"><i></i><div><b>${t.n}. ${esc(t.t)}${learned.has(t.n)?" ✓":""}</b><span>${esc(t.s)}</span></div></button>`).join(""):`<div class="empty">Nothing found for “${esc(q)}”. Try a shorter word.</div>`;
+  $("#palRes").innerHTML=palItems.length?palItems.map((t,i)=>`<button class="pr" role="option" aria-selected="${i===0}" data-n="${t.n}" style="--c:${LINES[t.c].c}"><i></i><div><b>${num(t.n)}. ${esc(t.t)}${learned.has(t.n)?" ✓":""}</b><span>${esc(t.s)}</span></div></button>`).join(""):`<div class="empty">Nothing found for “${esc(q)}”. Try a shorter word.</div>`;
   $$(".pr").forEach(b=>b.onclick=()=>{closePal();show(+b.dataset.n)});
 }
 function movePal(d){if(!palItems.length)return;palSel=(palSel+d+palItems.length)%palItems.length;$$(".pr").forEach((b,i)=>b.setAttribute("aria-selected",String(i===palSel)));$$(".pr")[palSel].scrollIntoView({block:"nearest"})}
@@ -522,14 +538,14 @@ document.addEventListener("keydown",e=>{
   if(e.key==="Escape"){closePal();closeSheet();return}
   const typing=/INPUT|TEXTAREA/.test(document.activeElement.tagName);if(typing||$("#pal").classList.contains("open"))return;
   if(e.key==="/"){e.preventDefault();openPal()}
-  else if(e.key==="ArrowRight"&&current&&byN(current+1))show(current+1);
-  else if(e.key==="ArrowLeft"&&current>1)show(current-1);
+  else if(e.key==="ArrowRight"&&current&&nb(current,1))show(nb(current,1).n);
+  else if(e.key==="ArrowLeft"&&current&&nb(current,-1))show(nb(current,-1).n);
   else if(e.key.toLowerCase()==="l"&&current)toggleLearned(current);
 });
 let sx=0,sy=0,st=0;
 $("#main").addEventListener("touchstart",e=>{const p=e.touches[0];sx=p.clientX;sy=p.clientY;st=Date.now()},{passive:true});
 $("#main").addEventListener("touchend",e=>{if(!current)return;const p=e.changedTouches[0];const dx=p.clientX-sx,dy=p.clientY-sy;
-  if(Date.now()-st<600&&Math.abs(dx)>90&&Math.abs(dy)<50&&!e.target.closest(".code,.map-scroll,.jump")){if(dx<0&&byN(current+1))show(current+1);else if(dx>0&&current>1)show(current-1)}},{passive:true});
+  if(Date.now()-st<600&&Math.abs(dx)>90&&Math.abs(dy)<50&&!e.target.closest(".code,.map-scroll,.jump")){if(dx<0&&nb(current,1))show(nb(current,1).n);else if(dx>0&&nb(current,-1))show(nb(current,-1).n)}},{passive:true});
 
 /* read progress */
 addEventListener("scroll",()=>{const h=document.documentElement;const max=h.scrollHeight-h.clientHeight;$("#readbar").style.width=(current&&max>0?(h.scrollTop/max*100):0)+"%"},{passive:true});
