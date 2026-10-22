@@ -34,9 +34,9 @@ System Design Metro is a single-file, interactive learning guide for exploring s
    cd <YOUR_REPOSITORY_DIRECTORY>
    ```
 
-3. Open `sd.html` in your browser.
+3. Open `index.html` in your browser.
 
-You can also double-click `sd.html` to open it directly.
+You can also double-click `index.html` to open it directly.
 
 ### Option 2: Run a local web server
 
@@ -51,7 +51,7 @@ python3 -m http.server 8000
 Then open:
 
 ```text
-http://localhost:8000/sd.html
+http://localhost:8000/index.html
 ```
 
 Stop the server with `Ctrl+C`.
@@ -81,7 +81,7 @@ The guide covers system design concepts across areas such as:
 - Performance, monitoring, and debugging
 - System design interview preparation
 
-The exact topics and lesson content are defined in `sd.html`.
+The exact topics and lesson content are defined in `index.html`.
 
 ## 🛠️ Technology
 
@@ -95,7 +95,7 @@ The project is designed to run as a standalone HTML page and does not require a 
 
 ```text
 .
-└── sd.html    # Main application: interface, styles, topic data, and interactions
+└── index.html    # Main application: interface, styles, topic data, and interactions
 ```
 
 If your repository uses a different filename, update the commands and structure above to match it.
